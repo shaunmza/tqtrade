@@ -1,0 +1,87 @@
+{
+  "VivaTargetPrice":5.5,
+  "TradeQwikTradesRefresh": 10,
+  "TrackCoins": [
+    {
+      "coinMarketCapId": "bitcoin",
+      "base": "VIVA",
+      "counter": "BTC",
+      "priceTarget": "BTC",
+      "tiers":
+        {"buy":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}]
+          ,
+        "sell":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}]
+        }
+    },
+    {
+      "coinMarketCapId": "steem",
+      "base": "VIVA",
+      "counter": "STEEM",
+      "priceTarget": "STEEM",
+      "tiers": {
+        "buy":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}],
+        "sell":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}]
+        }
+    },
+    {
+      "coinMarketCapId": "litecoin",
+      "base": "VIVA",
+      "counter": "LTC",
+      "priceTarget": "LTC",
+      "tiers": {
+        "buy":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}],
+        "sell":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}]
+        }
+    },
+    {
+      "coinMarketCapId": "golos",
+      "base": "VIVA",
+      "counter": "GOLOS",
+      "priceTarget": "GOLOS",
+      "tiers": {
+        "buy":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}],
+        "sell":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}]
+        }
+    },
+    {
+      "coinMarketCapId": "ethereum",
+      "base": "VIVA",
+      "counter": "ETH",
+      "priceTarget": "ETH",
+      "tiers": {
+        "buy":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}],
+        "sell":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}]
+        }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+<p id="data">Waiting for data...</p>
+
+<script type="text/javascript">
+  // WebSocket objects - created when window is loaded.
+  var s = null;
+
+  // Websocket server address.
+  var wsServerAddress = "ws://" + window.location.host;
+
+  window.onload = function() {
+
+    // This is a pure push notification from the server: register onmessage
+    // to update the time when the server sends new timestamps.
+    s = new WebSocket(wsServerAddress + "/ws");
+    s.onmessage = function(e) {
+      document.getElementById("data").innerHTML = e.data + '<br>' + document.getElementById("data").innerHTML ;
+    }
+  };
+
+</script>
+
+</body>
+</html>
