@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TradeQwik Trading Bot</title>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css" />
+</head>
+<body class="application">
+  <form action="" method="post" class="config_form">
+    {{if .Error}}
+{{printf "%+v" "Error"}}
+    {{end}}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-6">
+        <table class="table table-hover">
+          <tr>
+            <td>
+              Viva Target Price (in USD)
+            </td>
+            <td>
+              <input name="VivaTargetPrice" data-level1="VivaTargetPrice" data-level2="" data-level3="" value="{{ .Config.VivaTargetPrice }}" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              TradeQwik Trades Refresh (in seconds)
+            </td>
+            <td>
+              <input name="TradeQwikTradesRefresh" data-level1="TradeQwikTradesRefresh" data-level2="" data-level3="" value="{{ .Config.TradeQwikTradesRefresh }}" />
+            </td>
+          </tr>
+        {{range $i, $coin := .Config.TrackCoins}}
+          <tr>
+            <td id="tr_{{ $i }}" class="expand" colspan="2">
+              + {{ $coin.Base }} / {{ $coin.Counter }}
+            </td>
+          </tr>
+          <tr class="hidden tr_{{ $i }}">
+            <td>
+              Coin Market Cap Id
+            </td>
+            <td>
+              <input name="TrackCoins_{{ $i }}_CoinMarketCapId" data-level1="TrackCoins" data-level2="CoinMarketCapId" data-level3="" value="{{ $coin.CoinMarketCapID }}" />
+            </td>
+          </tr>
+          <tr class="hidden tr_{{ $i }}">
+            <td>
+              Base
+            </td>
+            <td>
+              <input name="TrackCoins_{{ $i }}_Base" data-level1="TrackCoins" data-level2="Base" data-level3="" value="{{ $coin.Base }}" />
+            </td>
+          </tr>
+          <tr class="hidden tr_{{ $i }}">
+            <td>
+              Counter
+            </td>
+            <td>
+              <input name="TrackCoins_{{ $i }}_Counter" data-level1="TrackCoins" data-level2="Counter" data-level3="" value="{{ $coin.Counter }}" />
+            </td>
+          </tr>
+          <tr class="hidden tr_{{ $i }}">
+            <td>
+              Price Target
+            </td>
+            <td>
+              <input name="TrackCoins_{{ $i }}_PriceTarget" data-level1="TrackCoins" data-level2="PriceTarget" data-level3="" value="{{ $coin.PriceTarget }}" />
+            </td>
+          </tr>
+          <tr class="hidden tr_{{ $i }} info">
+            <td>
+              Buys
+            </td>
+            <td>
+              <button type="button" data-index="{{ $i }}" class="btn btn-success addBuy">Add</button>
+            </td>
+          </tr>
+              {{range $j, $tier := $coin.Tiers.Buy}}
+          <tr class="hidden Buy tr_{{ $i }} trj_{{ $j }}">
+            <td>
+              Target %
+            </td>
+            <td>
+                <input name="TrackCoins_{{ $i }}_Buy_{{ $j }}_Target" data-level1="TrackCoins" data-level2="Buy" data-level3="Target" value="{{ $tier.Target }}" />
+              </td>
+            </tr>
+            <tr class="hidden Buy tr_{{ $i }} trj_{{ $j }}">
+              <td>
+                Amount (in VIVA)
+              </td>
+              <td>
+                <input name="TrackCoins_{{ $i }}_Buy_{{ $j }}_Amount" data-level1="TrackCoins" data-level2="Buy" data-level3="Amount" value="{{ $tier.Amount }}" />
+              </td>
+            </tr>
+            <tr class="hidden Buy tr_{{ $i }} trj_{{ $j }}">
+              <td>
+                &nbsp;
+              </td>
+              <td>
+                <button type="button" data-index="{{ $i }}" data-indexJ="{{ $j }}" class="btn btn-danger deleteBuy">Delete</button>
+              </td>
+            </tr>
+
+              {{end}}
+
+          <tr class="hidden tr_{{ $i }} info">
+            <td>
+              Sells
+            </td>
+            <td>
+              <button type="button" data-index="{{ $i }}" class="btn btn-success addSell">Add</button>
+            </td>
+          </tr>
+              {{range $j, $tier := $coin.Tiers.Sell}}
+          <tr class="hidden Sell tr_{{ $i }} trj_{{ $j }}">
+            <td>
+              Target %
+            </td>
+            <td>
+                <input name="TrackCoins_{{ $i }}_Sell_{{ $j }}_Target" data-level1="TrackCoins" data-level2="Sell" data-level3="Target" value="{{ $tier.Target }}" />
+              </td>
+            </tr>
+            <tr class="hidden Sell tr_{{ $i }} trj_{{ $j }}">
+              <td>
+                Amount (in VIVA)
+              </td>
+              <td>
+                <input name="TrackCoins_{{ $i }}_Sell_{{ $j }}_Amount" data-level1="TrackCoins" data-level2="Sell" data-level3="Amount" value="{{ $tier.Amount }}" />
+              </td>
+            </tr>
+            <tr class="hidden Sell tr_{{ $i }} trj_{{ $j }}">
+              <td>
+                &nbsp;
+              </td>
+              <td>
+                <button type="button" data-index="{{ $i }}" data-indexJ="{{ $j }}" class="btn btn-danger deleteSell">Delete</button>
+              </td>
+            </tr>
+              {{end}}
+	{{end}}
+</table>
+        <input type="button" class="save" value="Save" />
+
+    </div>
+    </div>
+  </div>
+  </form>
+</body>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript">
+        var sellJ = 100;
+        var addJ = 100;
+
+        $('.expand').click(function (e) {
+          $("." + e.currentTarget.id).toggleClass('hidden');
+        });
+
+        $('.addBuy').click(function (e) {
+          addRow('Buy', $(this).attr("data-index"), addJ, this);
+          addJ++;
+          e.preventDefault();
+        });
+
+        $('.addSell').click(function (e) {
+          addRow('Sell', $(this).attr("data-index"), sellJ, this);
+          sellJ++;
+          e.preventDefault();
+        });
+
+        $(document).on('click', '.deleteBuy', function(e){
+          var tr = $(this).parent().parent();
+          tr.prev().remove();
+          tr.prev().remove();
+          tr.remove();
+          e.preventDefault();
+        });
+
+        $('.deleteSell').click(function (e) {
+          var tr = $(this).parent().parent();
+          tr.prev().remove();
+          tr.prev().remove();
+          tr.remove();
+          e.preventDefault();
+        });
+
+        $('.save').click(function (e) {
+          var config = {"VivaTargetPrice": 0,
+                        "TradeQwikTradesRefresh": 0,
+                        "TrackCoins": []};
+          var trackCoins = [];
+          var tierIndex = 0;
+
+          var formData = $("form.config_form").serializeArray();
+
+          $.each(formData, function(i, pair){
+
+            if (typeof pair == 'undefined' || typeof pair.name == 'undefined'){
+              return true;
+            }
+            if (pair.name == "VivaTargetPrice"){
+              config.VivaTargetPrice = parseFloat(pair.value);
+            }
+            if (pair.name == "TradeQwikTradesRefresh"){
+              config.TradeQwikTradesRefresh = parseInt(pair.value);
+            }
+            arr = pair.name.split('_');
+            if (arr[0] == "TrackCoins"){
+              switch (arr[2]) {
+                case "Base":
+                case "Counter":
+                case "PriceTarget":
+                  if (typeof trackCoins[arr[1]] == 'undefined'){
+                    trackCoins[arr[1]] = {};
+                  }
+                  trackCoins[arr[1]][arr[2]] = pair.value;
+                  break;
+                case "CoinMarketCapId":
+                  if (typeof trackCoins[arr[1]] == 'undefined'){
+                    trackCoins[arr[1]] = {};
+                  }
+                  trackCoins[arr[1]][arr[2]] = pair.value;
+                  break;
+                default:
+                  if (pair.value == ''){
+                    return true;
+                  }
+                  if (typeof trackCoins[arr[1]]["Tiers"] == 'undefined'){
+                    trackCoins[arr[1]]["Tiers"] = {};
+                  }
+                  if (typeof trackCoins[arr[1]]["Tiers"][arr[2]] == 'undefined'){
+                    trackCoins[arr[1]]["Tiers"][arr[2]] = [];
+                    tierIndex = 0;
+                  }
+                  if (typeof trackCoins[arr[1]]["Tiers"][arr[2]][tierIndex] == 'undefined'){
+                    trackCoins[arr[1]]["Tiers"][arr[2]][tierIndex] = {};
+                  }
+
+                  trackCoins[arr[1]]["Tiers"][arr[2]][tierIndex][arr[4]] = parseFloat(pair.value);
+
+                  if (arr[4] == "Amount"){
+                    tierIndex++;
+                  }
+
+              }
+            }
+          });
+
+          config.TrackCoins = trackCoins;
+
+          var form = document.createElement("form");
+          form.setAttribute("method", "post");
+          form.setAttribute("action", "");
+          var hiddenField = document.createElement("input");
+          hiddenField.setAttribute("type", "hidden");
+          hiddenField.setAttribute("name", "jsonConfig");
+          hiddenField.setAttribute("value", JSON.stringify(config));
+
+          form.appendChild(hiddenField);
+
+          document.body.appendChild(form);
+          form.submit();
+
+          e.preventDefault();
+        });
+
+
+        function addRow(type, i, j, element){
+          txt = "<tr class=\"" + type + " tr_" + i + " trJ_" + j + "\"><td>Target %</td><td><input name=\"TrackCoins_" + i + "_" + type + "_" + j + "_Target\" /></td></tr>";
+          txt = txt + "<tr class=\"" + type + " tr_" + i + " trJ_" + j + "\"><td>Amount (in VIVA)</td><td><input name=\"TrackCoins_" + i + "_" + type + "_" + j + "_Amount\" /></td></tr>";
+          txt = txt + "<tr class=\"" + type + " tr_" + i + " trJ_" + j + "\"><td>&nbsp;</td><td><button type=\"button\" data-index=\"" + i + "\" data-indexJ=\"" + j + "\" class=\"btn btn-danger delete" + type + "\">Delete</button></td></tr>";
+
+          $(txt).insertAfter($(element).closest('tr'));
+          console.log(txt);
+
+        }
+
+    </script>
+</html>

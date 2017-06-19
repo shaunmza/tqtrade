@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"os"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -61,6 +64,11 @@ type listeners struct {
 	writers []chan string
 }
 
+type configEdit struct {
+	Config *config
+	Error  error
+}
+
 var ct *coinmarketcap.Ticker
 var c *config
 var lstn listeners
@@ -75,6 +83,8 @@ var priceTargets map[string]price
 var openTrades map[string]*tradeqwik.OpenTrades
 
 var wSocket *websocket.Conn
+
+var templates = template.New("")
 
 func main() {
 	ch := make([]chan string, 0)
@@ -112,6 +122,8 @@ func main() {
 	mapCoins(r)
 
 	http.Handle("/ws", websocket.Handler(wsHandler))
+	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("static/css"))))
+	http.Handle("/config", http.HandlerFunc(manageConfig))
 	http.Handle("/", http.FileServer(http.Dir("static/html")))
 	go func() {
 		http.ListenAndServe(fmt.Sprintf(":%d", 4050), nil)
@@ -152,18 +164,23 @@ func main() {
 
 func setWalls() {
 	broadcast(fmt.Sprintln("Going to set buy / sell walls"))
+	fmt.Println("Going to set buy / sell walls " + string(time.Now().Format("15:04")))
 
 	// get balances
 	balance, err := trading.GetBalance()
 	broadcast(fmt.Sprintf("Balance is %+v", balance))
 	if err != nil {
+		broadcast(fmt.Sprintln("Not setting walls, got an error from TQ"))
 		broadcast(err.Error())
+		return
 	}
 
 	// get my open trades for each watched pair
 	openTrades, err := trading.GetPending()
 	if err != nil {
+		broadcast(fmt.Sprintln("Not setting walls, got an error from TQ"))
 		broadcast(err.Error())
+		return
 	}
 
 	// get sell / buy wall levels
@@ -177,22 +194,38 @@ func setWalls() {
 
 		// get targets for pair
 		for _, b := range priceTargets[pair.PriceTarget].Targets.Buy {
+
+			if balance.Currencies[pair.PriceTarget].Amount < b.Amount*b.Price {
+				broadcast(fmt.Sprintf("Insufficient balance (%f) cannot Buy %f %s/%s @ %f ",
+					balance.Currencies[pair.PriceTarget].Amount, b.Amount, pair.Base, pair.Counter, b.Price))
+				continue
+			}
+
 			// Now recreate
 			broadcast(fmt.Sprintf("Going to Buy %f %s/%s @ %f ", b.Amount, pair.Base, pair.Counter, b.Price))
 			a, err := trading.Buy(pair.Base, pair.Counter, b.Amount, b.Price)
 			broadcast(fmt.Sprintf("Buying response %+v", a))
 			if err != nil {
+				broadcast(fmt.Sprintln("Failed setting buy walls, got an error from TQ"))
 				broadcast(err.Error())
+				return
 			}
 		}
 
 		for _, s := range priceTargets[pair.PriceTarget].Targets.Sell {
+			if balance.Currencies[pair.PriceTarget].Amount < s.Amount*s.Price {
+				broadcast(fmt.Sprintf("Insufficient balance (%f) cannot Sell %f %s/%s @ %f ",
+					balance.Currencies[pair.PriceTarget].Amount, s.Amount, pair.Base, pair.Counter, s.Price))
+				continue
+			}
 			// Now recreate
 			broadcast(fmt.Sprintf("Going to Sell %f %s/%s @ %f ", s.Amount, pair.Base, pair.Counter, s.Price))
 			a, err := trading.Buy(pair.Base, pair.Counter, s.Amount, s.Price)
 			broadcast(fmt.Sprintf("Selling response %+v", a))
 			if err != nil {
+				broadcast(fmt.Sprintln("Failed setting buy walls, got an error from TQ"))
 				broadcast(err.Error())
+				return
 			}
 		}
 
@@ -201,6 +234,7 @@ func setWalls() {
 
 func mapCoins(ticker coinmarketcap.Ticker) {
 	broadcast(fmt.Sprintln("Mapping coins"))
+	fmt.Println("Mapping coins " + string(time.Now().Format("15:04")))
 
 	ts := targets{}
 	for _, coin := range ticker.Coins {
@@ -227,23 +261,23 @@ func mapCoins(ticker coinmarketcap.Ticker) {
 
 		switch coin.ID {
 		case "bitcoin":
-			//fmt.Printf("Bitcoin price: %f, USD price: %f, Target VIVA price: %+v\n\n", coin.PriceBtc, coin.PriceUsd, ts)
+			fmt.Printf("Bitcoin price: %f, USD price: %f, Target VIVA price: %+v\n\n", coin.PriceBtc, coin.PriceUsd, ts)
 			broadcast(fmt.Sprintf("Bitcoin BTC price: %f, USD price: %f<br>Target VIVA prices: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
 			priceTargets["BTC"] = price{Base: "VIVA", Counter: "BTC", Targets: ts}
 		case "litecoin":
-			//fmt.Printf("Litecoin price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
+			fmt.Printf("Litecoin price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
 			broadcast(fmt.Sprintf("Litecoin BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
 			priceTargets["LTC"] = price{Base: "VIVA", Counter: "LTC", Targets: ts}
 		case "steem":
-			//fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
+			fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
 			broadcast(fmt.Sprintf("Steem BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
 			priceTargets["STEEM"] = price{Base: "VIVA", Counter: "STEEM", Targets: ts}
 		case "golos":
-			//fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
+			fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
 			broadcast(fmt.Sprintf("Golos BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
 			priceTargets["GOLOS"] = price{Base: "VIVA", Counter: "STEEM", Targets: ts}
 		case "ethereum":
-			//fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
+			fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
 			broadcast(fmt.Sprintf("Ethereum BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
 			priceTargets["ETH"] = price{Base: "VIVA", Counter: "STEEM", Targets: ts}
 		}
@@ -291,7 +325,70 @@ func wsHandler(ws *websocket.Conn) {
 func broadcast(data string) {
 	go func() {
 		for _, cl := range lstn.writers {
+			fmt.Println("Writing to listener " + string(time.Now().Format("15:04")))
 			cl <- data
 		}
 	}()
+}
+
+func manageConfig(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method) //get request method
+	var tC = &config{}
+	var cUse = configEdit{}
+	var err error
+
+	if r.Method == "POST" {
+		r.ParseForm()
+		//fmt.Printf("Config: %+v\n", r.Form)
+		tC, err = saveConfig(r.Form)
+		cUse = configEdit{Config: tC, Error: err}
+	} else {
+		cUse = configEdit{Config: c}
+	}
+
+	//p, _ := json.Marshal(c)
+	//t := template.New("templates/config.html")      //create a new template
+	t, err := template.ParseFiles("templates/config.html") //open and parse a template text file
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	err = t.Execute(w, cUse)
+
+	/*err = t.ExecuteTemplate(w, "templates/config.html", p)*/
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} /**/
+}
+
+func saveConfig(formData url.Values) (*config, error) {
+
+	for key, values := range formData {
+		fmt.Printf("%+v : %+v\n", key, values)
+
+	}
+	var j = []byte(formData["jsonConfig"][0])
+
+	cTest := &config{}
+	err := json.Unmarshal(j, &cTest)
+
+	if err != nil {
+		return cTest, err
+	}
+
+	err = filePutContents("config.json", j)
+
+	if err == nil {
+		c = cTest
+		broadcast("Config updated")
+	} else {
+		fmt.Println(err)
+	}
+
+	return cTest, err
+}
+
+func filePutContents(filename string, content []byte) error {
+	err := ioutil.WriteFile(filename, content, os.ModePerm)
+
+	return err
 }
