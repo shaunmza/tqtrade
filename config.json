@@ -82,6 +82,22 @@
           {"target": 10, "amount": 3000},
           {"target": 15, "amount": 5000}]
         }
+    },
+    {
+      "coinMarketCapId": "dogecoin",
+      "base": "VIVA",
+      "counter": "DOGE",
+      "priceTarget": "DOGE",
+      "tiers": {
+        "buy":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}],
+        "sell":[
+          {"target": 8, "amount": 2000},
+          {"target": 10, "amount": 3000},
+          {"target": 15, "amount": 5000}]
+        }
     }
   ]
 }

@@ -274,13 +274,17 @@ func mapCoins(ticker coinmarketcap.Ticker) {
 			broadcast(fmt.Sprintf("Steem BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
 			priceTargets["STEEM"] = price{Base: "VIVA", Counter: "STEEM", Targets: ts}
 		case "golos":
-			fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
+			fmt.Printf("Golos price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
 			broadcast(fmt.Sprintf("Golos BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
-			priceTargets["GOLOS"] = price{Base: "VIVA", Counter: "STEEM", Targets: ts}
+			priceTargets["GOLOS"] = price{Base: "VIVA", Counter: "GOLOS", Targets: ts}
 		case "ethereum":
-			fmt.Printf("Steem price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
+			fmt.Printf("Ethereum price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
 			broadcast(fmt.Sprintf("Ethereum BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
-			priceTargets["ETH"] = price{Base: "VIVA", Counter: "STEEM", Targets: ts}
+			priceTargets["ETH"] = price{Base: "VIVA", Counter: "ETH", Targets: ts}
+		case "dogecoin":
+			fmt.Printf("Doge price: %f, Target VIVA price: %f\n\n", coin.PriceUsd, ts)
+			broadcast(fmt.Sprintf("Doge BTC price: %f, USD price: %f<br>Target VIVA price: %+v<br>", coin.PriceBtc, coin.PriceUsd, ts))
+			priceTargets["DOGE"] = price{Base: "VIVA", Counter: "DOGE", Targets: ts}
 		}
 	}
 
