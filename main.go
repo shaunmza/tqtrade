@@ -93,8 +93,9 @@ func main() {
 	c = loadConfig("config.json")
 	fmt.Println(c)
 
-	// Put your API key in here
-	trading.Init("YOUR API KEY")
+	// Put your API key in an environment variable
+	k := os.Getenv("TQAPIKEY")
+	trading.Init(k)
 
 	// Initialise these, if you add more currencies, change the 1 to whatever
 	priceTargets = make(map[string]price, 1)
