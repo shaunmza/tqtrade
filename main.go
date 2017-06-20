@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -71,6 +72,7 @@ type configEdit struct {
 
 var ct *coinmarketcap.Ticker
 var c *config
+var cFile *string
 var lstn listeners
 
 var cRefreshPeriod int
@@ -90,8 +92,17 @@ func main() {
 	ch := make([]chan string, 0)
 	lstn = listeners{ch}
 
-	c = loadConfig("config.json")
-	fmt.Println(c)
+	m := "Absolute  path to config file. ie -config=/config.json"
+	cFile = flag.String("config", "", m)
+
+	flag.Parse()
+
+	// Make sure we have a config file
+	if *cFile == "" {
+		panic(fmt.Sprintf("Error: %s", m))
+	}
+
+	c = loadConfig(*cFile)
 
 	// Put your API key in an environment variable
 	k := os.Getenv("TQAPIKEY")
@@ -380,7 +391,7 @@ func saveConfig(formData url.Values) (*config, error) {
 		return cTest, err
 	}
 
-	err = filePutContents("config.json", j)
+	err = filePutContents(*cFile, j)
 
 	if err == nil {
 		c = cTest
